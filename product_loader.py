@@ -1,9 +1,9 @@
 import pandas as pd
-import requests
 import json
 import os
 import re
 from google import genai
+from woocommerce import API
 from dotenv import load_dotenv
 import time
 from typing import Dict, Any
@@ -44,8 +44,17 @@ class WooCommerceProductLoader:
         # Configure Gemini
         proxy_vars = ["all_proxy", "ALL_PROXY", "ftp_proxy", "FTP_PROXY"]
         for var in proxy_vars:
-            del os.environ[var]
+            if var in os.environ:
+                del os.environ[var]
         self.client = genai.Client(api_key=self.gemini_api_key)
+
+        # Configure WooCommerce API
+        self.wcapi = API(
+            url=self.woocommerce_url,
+            consumer_key=self.consumer_key,
+            consumer_secret=self.consumer_secret,
+            version="wc/v3"
+        )
 
         logger.info("WooCommerce Product Loader initialized successfully")
 
@@ -164,44 +173,35 @@ class WooCommerceProductLoader:
     ) -> Dict[str, Any]:
         """Create product payload for WooCommerce API"""
         return {
-            "product": {
-                "title": product_data["product_name"],
-                "type": "simple",
-                "price": str(product_data["price"]),
-                "regular_price": str(product_data["regular_price"]),
-                "description": product_data["description"],
-                "short_description": product_data["short_description"],
-                "attributes": product_data["attributes"],
-            }
+            "name": product_data["product_name"],
+            "type": "simple",
+            "regular_price": str(product_data["regular_price"]),
+            "sale_price": str(product_data["price"]),
+            "price": str(product_data["price"]),
+            "description": product_data["description"],
+            "short_description": product_data["short_description"],
+            "attributes": product_data["attributes"],
         }
 
     def add_product_to_woocommerce(self, product_payload: Dict[str, Any]) -> bool:
         """Add product to WooCommerce via API"""
-        url = f"{self.woocommerce_url}/wc-api/v3/products"
-
         try:
-            response = requests.post(
-                url,
-                auth=(self.consumer_key, self.consumer_secret),
-                headers={"Content-Type": "application/json"},
-                json=product_payload,
-                timeout=30,
-            )
-
+            response = self.wcapi.post("products", product_payload)
+            
             if response.status_code in [200, 201]:
                 logger.info(
-                    f"Successfully added product: {product_payload['product']['title']}"
+                    f"Successfully added product {product_payload['name']} with id {response.json()['id']}"
                 )
                 return True
             else:
                 logger.error(
-                    f"Failed to add product {product_payload['product']['title']}: {response.status_code} - {response.text}"
+                    f"Failed to add product {product_payload['name']}: {response.status_code} - {response.text}"
                 )
                 return False
 
-        except requests.RequestException as e:
+        except Exception as e:
             logger.error(
-                f"Request error when adding product {product_payload['product']['title']}: {e}"
+                f"Request error when adding product {product_payload['name']}: {e}"
             )
             return False
 
@@ -268,7 +268,7 @@ def main():
         loader = WooCommerceProductLoader()
 
         # Process products from Excel file
-        excel_file_path = "محصولات.xlsx"
+        excel_file_path = "data/محصولات.xlsx"
 
         if not os.path.exists(excel_file_path):
             logger.error(f"Excel file not found: {excel_file_path}")

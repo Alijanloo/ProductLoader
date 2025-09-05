@@ -115,7 +115,7 @@ class WooCommerceProductLoader:
 
                 parsed_response = json.loads(response_text)
 
-                required_fields = ["description", "short_description", "attributes"]
+                required_fields = ["slug", "description", "short_description", "attributes"]
                 for field in required_fields:
                     if field not in parsed_response:
                         raise ValueError(f"Missing required field: {field}")
@@ -174,6 +174,7 @@ class WooCommerceProductLoader:
         """Create product payload for WooCommerce API"""
         return {
             "name": product_data["product_name"],
+            "slug": product_data["slug"],
             "type": "simple",
             "status": "draft",
             "regular_price": str(product_data["regular_price"]),
@@ -229,6 +230,7 @@ class WooCommerceProductLoader:
                     # Prepare product data
                     product_data = {
                         "product_name": row["product_name"],
+                        "slug": gemini_response["slug"],
                         "price": row["price"],
                         "regular_price": row["regular_price"],
                         "description": gemini_response["description"],

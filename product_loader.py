@@ -175,6 +175,7 @@ class WooCommerceProductLoader:
         return {
             "name": product_data["product_name"],
             "type": "simple",
+            "status": "draft",
             "regular_price": str(product_data["regular_price"]),
             "sale_price": str(product_data["price"]),
             "price": str(product_data["price"]),

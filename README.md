@@ -26,12 +26,7 @@ This Python script reads product data from an Excel file, processes it through G
    pip install -r requirements.txt
    ```
 
-3. Copy the environment template and configure your settings:
-   ```bash
-   cp .env.example .env
-   ```
-
-4. Edit `.env` file with your actual credentials:
+3. Edit `.env` file with your actual credentials:
    ```
    WOOCOMMERCE_URL=https://yourstore.com
    WOOCOMMERCE_CONSUMER_KEY=ck_your_consumer_key
@@ -47,15 +42,9 @@ Your Excel file should have these columns (column names are flexible):
 - **Price** (numeric)
 - **Regular Price** (or "regular_price", numeric)
 
-Example:
-| Product Name | Raw Features | Price | Regular Price |
-|--------------|-------------|-------|---------------|
-| Premium Laptop | Intel i7, 16GB RAM, 512GB SSD, Windows 11 | 1200 | 1500 |
-| Wireless Mouse | Bluetooth, Ergonomic, 1600 DPI, USB-C charging | 25 | 35 |
-
 ## Usage
 
-1. Place your Excel file in the same directory as the script and name it `محصولات.xlsx` (or modify the script to use a different filename)
+1. Place your Excel file in the same directory as the script and name it `data/products.xlsx` (or modify the script to use a different filename)
 
 2. Run the script:
    ```bash
@@ -65,6 +54,7 @@ Example:
 The script will:
 1. Read products from the Excel file
 2. Process each product through Gemini AI to generate:
+   - Slug
    - Detailed description
    - Short description
    - Structured attributes
@@ -84,46 +74,7 @@ The script will:
 2. Create a new API key
 3. Copy the API key to your `.env` file
 
-Note: This script uses the new `google-genai` package with the Gemini 2.0 Flash model for improved performance.
-
-## Error Handling
-
-The script includes comprehensive error handling:
-- Continues processing if one product fails
-- Provides fallback descriptions if Gemini AI fails
-- Logs all operations with timestamps
-- Reports success/failure statistics
-
-## Customization
-
-You can customize the script by modifying:
-- The Gemini prompt in `process_with_gemini()` method
-- Product payload structure in `create_woocommerce_product()` method
-- Column mapping in `read_excel_file()` method
-- Retry logic and rate limiting
-
-## Logging
-
-The script logs all operations to the console with timestamps. Log levels include:
-- INFO: Normal operations
-- ERROR: Failed operations
-- DEBUG: Detailed debugging information
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Missing columns error**: Check that your Excel file has the required columns with correct names
-2. **API authentication error**: Verify your WooCommerce consumer key and secret
-3. **Gemini API error**: Check your Gemini API key and ensure you have credits
-4. **Rate limiting**: The script includes 1-second delays between requests to avoid rate limiting
-
-### Debug Mode
-
-To enable more detailed logging, modify the logging configuration in the script:
-```python
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
-```
+Note: This script uses the new `google-genai` package with the Gemini 2.5 Flash model for improved performance.
 
 ## License
 

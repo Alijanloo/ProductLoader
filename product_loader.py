@@ -28,7 +28,6 @@ class WooCommerceProductLoader:
         self.consumer_secret = os.getenv("WOOCOMMERCE_CONSUMER_SECRET")
         self.gemini_api_key = os.getenv("GEMINI_API_KEY")
 
-        # Validate required environment variables
         if not all(
             [
                 self.woocommerce_url,
@@ -41,14 +40,12 @@ class WooCommerceProductLoader:
                 "Missing required environment variables. Please check your .env file."
             )
 
-        # Configure Gemini
         proxy_vars = ["all_proxy", "ALL_PROXY", "ftp_proxy", "FTP_PROXY"]
         for var in proxy_vars:
             if var in os.environ:
                 del os.environ[var]
         self.client = genai.Client(api_key=self.gemini_api_key)
 
-        # Configure WooCommerce API
         self.wcapi = API(
             url=self.woocommerce_url,
             consumer_key=self.consumer_key,
@@ -210,7 +207,6 @@ class WooCommerceProductLoader:
     def process_products(self, excel_file_path: str):
         """Main method to process all products from Excel file"""
         try:
-            # Read Excel file
             df = self.read_excel_file(excel_file_path)
 
             successful_uploads = 0
@@ -222,12 +218,10 @@ class WooCommerceProductLoader:
                         f"Processing product {index + 1}/{len(df)}: {row['product_name']}"
                     )
 
-                    # Process with Gemini
                     gemini_response = self.process_with_gemini(
                         row["product_name"], str(row["raw_features"])
                     )
 
-                    # Prepare product data
                     product_data = {
                         "product_name": row["product_name"],
                         "slug": gemini_response["slug"],
@@ -238,16 +232,13 @@ class WooCommerceProductLoader:
                         "attributes": gemini_response["attributes"],
                     }
 
-                    # Create WooCommerce payload
                     woocommerce_payload = self.create_woocommerce_product(product_data)
 
-                    # Add to WooCommerce
                     if self.add_product_to_woocommerce(woocommerce_payload):
                         successful_uploads += 1
                     else:
                         failed_uploads += 1
 
-                    # Add delay to avoid rate limiting
                     time.sleep(1)
 
                 except Exception as e:
@@ -267,11 +258,9 @@ class WooCommerceProductLoader:
 def main():
     """Main function to run the product loader"""
     try:
-        # Initialize the loader
         loader = WooCommerceProductLoader()
 
-        # Process products from Excel file
-        excel_file_path = "data/محصولات.xlsx"
+        excel_file_path = "data/products.xlsx"
 
         if not os.path.exists(excel_file_path):
             logger.error(f"Excel file not found: {excel_file_path}")
